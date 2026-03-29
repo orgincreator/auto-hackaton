@@ -29,6 +29,7 @@ Physics-grounded docking simulation in the Hill reference frame.
 - Produces a full mission report plot: trajectory, distance, speed, thrust commands, and mission log
 
 **Result from simulation:** 666s duration · 46mm final distance · 0.008 mm/s final speed · Status: COMPLETE
+<img width="2227" height="1803" alt="amss_docking_sim" src="https://github.com/user-attachments/assets/0ec8e74d-e482-4e13-a114-ccdfc314c676" />
 
 ### Layer 2 — Distributed Visual Assembly (`flet_docking_sim_live.py`)
 
