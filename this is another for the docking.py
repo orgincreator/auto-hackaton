@@ -70,6 +70,7 @@ DTS = 2.0  # real seconds per sim step at 1x speed
 MUN = 3.986004418e14  # Earth's gravitational parameter (m^3/s^2)
 R_ORBIT  = 6.771e6
 N        = np.sqrt(MUN / R_ORBIT**3)   # ~0.001107 rad/s  (LEO ~400 km)
+POLICY   = None  # placeholder for learned policy
 #__for the computer vision part, we can generate synthetic images of the simulation state and train a CNN to predict the control actions (velocity adjustments) needed for docking. This would involve rendering the simulation state to an image, creating a dataset of image-control pairs, and training a model on this data.
 class DockingState(Enum):
     APPROACH  = auto()
@@ -281,7 +282,13 @@ def step_flets(fs, t, log_fn):
             port_offset = 0 #np.array([tx - CX, ty - CY, 0.0, 0.0])
             cw_s_error  = cw_s - port_offset   # error relative to port IN hub fram
             phase  = role_to_docking_state(f['role'])
-            thrust = mpc_thrust(cw_s_error, phase)
+            if POLICY is not None:
+                dist  = float(np.linalg.norm(cw_s[:2]))
+                obs   = np.array([cw_s[0], cw_s[1], cw_s[2], cw_s[3],
+                                dist, f['energy']])
+                thrust = POLICY.get_thrust(obs)
+            else:
+                thrust = mpc_thrust(cw_s, phase)
             cw_s   = cw_propagate(cw_s, thrust, DT)
             f['x']  = cw_s[0] + CX
             f['y']  = cw_s[1] + CY   
@@ -991,4 +998,12 @@ if __name__ == '__main__':
     print("  Scroll=zoom  Drag=pan  Sliders=adjust params")
     print("=" * 55)
     sim = FletSim()
+    # policy = DockingPolicy()
+    # train_policy(policy, episodes=2000)
+    # torch.save(policy.state_dict(), 'docking_policy.pth')
+    # POLICY = policy
+
+    # uncomment to load a previously trained policy
+    # POLICY = DockingPolicy()
+    # POLICY.load_state_dict(torch.load('docking_policy.pth'))
     sim.run()
